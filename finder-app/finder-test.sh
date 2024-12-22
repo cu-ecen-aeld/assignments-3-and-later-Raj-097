@@ -50,17 +50,32 @@ then
 fi
 #echo "Removing the old writer utility and compiling as a native application"
 #make clean
-#make
+make clean || { echo "make clean failed"; exit 1; }
+make all || { echo "make all failed"; exit 1; }
+
+if [ ! -f conf/username.txt ]; then
+    echo "username.txt not found"
+    exit 1
+fi
+
+if [ ! -x ./writer ]; then
+    echo "writer executable not found"
+    exit 1
+fi
+
 
 for i in $( seq 1 $NUMFILES)
 do
-	./writer.sh "$WRITEDIR/${username}$i.txt" "$WRITESTR"
+	./writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
 done
 
 OUTPUTSTRING=$(./finder.sh "$WRITEDIR" "$WRITESTR")
+echo "Output from finder.sh: $OUTPUTSTRING"
+
 
 # remove temporary directories
 rm -rf /tmp/aeld-data
+
 
 set +e
 echo ${OUTPUTSTRING} | grep "${MATCHSTR}"
