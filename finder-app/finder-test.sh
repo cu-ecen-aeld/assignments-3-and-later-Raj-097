@@ -50,8 +50,8 @@ then
 fi
 #echo "Removing the old writer utility and compiling as a native application"
 #make clean
-make clean || { echo "make clean failed"; exit 1; }
-make all || { echo "make all failed"; exit 1; }
+#make clean || { echo "make clean failed"; exit 1; }
+#make all || { echo "make all failed"; exit 1; }
 
 if [ ! -f conf/username.txt ]; then
     echo "username.txt not found"

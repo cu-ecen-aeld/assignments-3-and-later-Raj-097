@@ -1,4 +1,10 @@
 #include "systemcalls.h"
+#include <stdlib.h>    // For system()
+#include <sys/wait.h>  // For WIFEXITED, WEXITSTATUS
+#include <unistd.h>    // For fork(), execv(), pid_t
+#include <stdarg.h>    // For variable arguments (va_list, va_start, etc.)
+#include <stdio.h>     // For perror()
+
 
 /**
  * @param cmd the command to execute with system()
@@ -16,8 +22,25 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
+if (cmd == NULL) {
+        return false; // Null command is an error
+    }
+fflush(stdout);
 
-    return true;
+    int ret = system(cmd); // Call the system function with the command
+
+    // Check the return value of system()
+    if (ret == -1) {
+        return false; // Error in invocation of system()
+    }
+
+    // WEXITSTATUS extracts the exit status of the command  and WIFEEXITED says if the child process exited normally
+    if (WIFEXITED(ret) && WEXITSTATUS(ret) == 0) {
+        return true; // Command executed successfully
+    }
+
+    return false; // Command failed
+
 }
 
 /**
@@ -36,8 +59,8 @@ bool do_system(const char *cmd)
 
 bool do_exec(int count, ...)
 {
-    va_list args;
-    va_start(args, count);
+    va_list args;      // used to access the arguments
+    va_start(args, count);  // macro that initializs args
     char * command[count+1];
     int i;
     for(i=0; i<count; i++)
@@ -47,8 +70,7 @@ bool do_exec(int count, ...)
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
-    command[count] = command[count];
-
+ 
 /*
  * TODO:
  *   Execute a system command by calling fork, execv(),
@@ -60,8 +82,47 @@ bool do_exec(int count, ...)
 */
 
     va_end(args);
+    
+    // Check if the first command is an absolute path
+    if (!is_absolute_path(command[0])) {
+        fprintf(stderr, "Error: Command must be an absolute path: %s\n", command[0]);
+        return false;
+    }
 
-    return true;
+    // Fork a child process
+    fflush(stdout);
+
+    pid_t pid = fork();
+    if (pid == -1) {
+        perror("fork failed");
+        return false;
+    }
+
+    if (pid == 0) {
+        // Child process: Execute the command using execv
+        if (execv(command[0], command) == -1) {
+            perror("execv failed");
+            return false;
+        }
+    } 
+    else {
+        // Parent process: Wait for the child process to finish
+        int status;
+        if (waitpid(pid, &status, 0) == -1) {
+            perror("waitpid failed");
+            return false;
+        }
+
+        // Check the exit status of the child process
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            return true;  // Command executed successfully
+        } 
+        else {
+            return false;  // Command failed (non-zero exit status)
+        }
+    }
+
+    return false; // Default return if execution failed (shouldn't reach here)
 }
 
 /**
@@ -92,8 +153,55 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
-
     va_end(args);
+// Check if the first command is an absolute path
+    if (!is_absolute_path(command[0])) {
+        fprintf(stderr, "Error: Command must be an absolute path: %s\n", command[0]);
+        return false;
+    }
 
+    // Fork a child process
+    fflush(stdout);
+
+    pid_t pid = fork();
+    if (pid == -1) {
+        perror("fork failed");
+        return false;
+    }
+
+    if (pid == 0) {
+        // Child process: Redirect stdout to the output file
+        FILE *output = freopen(outputfile, "w", stdout);
+        if (output == NULL) {
+            perror("freopen failed");
+            return false;
+        }
+
+        // Execute the command using execv
+        if (execv(command[0], command) == -1) {
+            perror("execv failed");
+            return false;
+        }
+    } else {
+        // Parent process: Wait for the child process to finish
+        int status;
+        if (waitpid(pid, &status, 0) == -1) {
+            perror("waitpid failed");
+            return false;
+        }
+
+        // Check the exit status of the child process
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            return true;  // Command executed successfully
+        } else {
+            return false;  // Command failed (non-zero exit status)
+        }
+    }
+
+    return false; // Default return if execution failed (shouldn't reach here)
     return true;
+}
+
+bool is_absolute_path(const char *path) {
+    return path[0] == '/';  // Absolute paths start with '/'
 }
