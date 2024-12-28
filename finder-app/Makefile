@@ -1,10 +1,8 @@
 # Set default values for CC and LD (native compiler)
 CC = gcc
 
-
 # Compiler flags
 CFLAGS = -Wall -g
-#CFLAGS += -I/usr/include -I/usr/local/include
 
 # Target to build the "writer" application
 TARGET = writer
@@ -26,7 +24,8 @@ else
 	LD = $(CROSS_COMPILE)ld
 endif
 
-#default target to build the application
+
+#_______Application________
 all: $(TARGET)
 
 # Rule to build the target executable
@@ -37,10 +36,10 @@ $(TARGET): $(OBJECTS)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean target to remove compiled files
+
+# Clean target to remove compiled app
 clean:
 	rm -f $(TARGET) $(OBJECTS)
 
-.PHONY: all clean
-
+.PHONY: app clean 
 
