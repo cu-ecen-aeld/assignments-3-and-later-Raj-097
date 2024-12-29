@@ -92,11 +92,19 @@ ${CROSS_COMPILE}readelf -a bin/busybox | grep "program interpreter"
 ${CROSS_COMPILE}readelf -a bin/busybox | grep "Shared library"
 
 # TODO: Add library dependencies to rootfs
-ls -l /home/raj_u22/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/
 
-cp /home/raj_u22/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 ${OUTDIR}/rootfs/lib/
+if [ -d "/home/raj_u22/assignment-1-Raj-097/arm-gnu-toolchain/" ]; then
+	echo "Local Machine"
+	cp /home/raj_u22/assignment-1-Raj-097/arm-gnu-toolchain/ld-linux-aarch64.so.1 ${OUTDIR}/rootfs/lib/
+	cp /home/raj_u22/assignment-1-Raj-097/arm-gnu-toolchain/libm.so.6 /home/raj_u22/assignment-1-Raj-097/arm-gnu-toolchain/libresolv.so.2 /home/raj_u22/assignment-1-Raj-097/arm-gnu-toolchain/libc.so.6 ${OUTDIR}/rootfs/lib64/
+  
+else
+	echo "GitHub runner"
+	cp /arm-gnu-toolchain/ld-linux-aarch64.so.1 ${OUTDIR}/rootfs/lib/
+	cp /arm-gnu-toolchain/libm.so.6 /tmp/arm-gnu-toolchain/libresolv.so.2 /tmp/arm-gnu-toolchain/libc.so.6 ${OUTDIR}/rootfs/lib64/
+ 
+fi
 
-cp /home/raj_u22/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 /home/raj_u22/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 /home/raj_u22/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 ${OUTDIR}/rootfs/lib64/
 
 # TODO: Make device nodes
 cd ${OUTDIR}/rootfs
@@ -104,10 +112,19 @@ sudo mknod -m 666 dev/null c 1 3
 sudo mknod -m 666 dev/tty c 5 1 
 
 # TODO: Clean and build the writer utility
-cd /home/raj_u22/assignment-1-Raj-097/finder-app
-make clean
-make CROSS_COMPILE=${CROSS_COMPILE} all
- 
+if [ -d "/home/raj_u22/assignment-1-Raj-097/finder-app" ]; then
+	echo "Local Machine"
+	cd /home/raj_u22/assignment-1-Raj-097/finder-app
+	make clean
+	make CROSS_COMPILE=${CROSS_COMPILE} all
+	
+else
+	echo "GitHub Runner"
+	cd /finder-app
+	make clean
+	make CROSS_COMPILE=${CROSS_COMPILE} all
+fi
+
 
 # TODO: Copy the finder related scripts and executables to the /home directory
 # on the target rootfs
