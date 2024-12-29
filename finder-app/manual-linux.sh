@@ -100,8 +100,8 @@ if [ -d "/home/raj_u22/assignment-1-Raj-097/arm-gnu-toolchain/" ]; then
   
 else
 	echo "GitHub runner"
-	cp /arm-gnu-toolchain/ld-linux-aarch64.so.1 ${OUTDIR}/rootfs/lib/
-	cp /arm-gnu-toolchain/libm.so.6 /tmp/arm-gnu-toolchain/libresolv.so.2 /tmp/arm-gnu-toolchain/libc.so.6 ${OUTDIR}/rootfs/lib64/
+	cp /__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/arm-gnu-toolchain/ld-linux-aarch64.so.1 ${OUTDIR}/rootfs/lib/
+	cp /__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/arm-gnu-toolchain/libm.so.6 /tmp/arm-gnu-toolchain/libresolv.so.2 /__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/arm-gnu-toolchain/libc.so.6 ${OUTDIR}/rootfs/lib64/
  
 fi
 
@@ -120,7 +120,7 @@ if [ -d "/home/raj_u22/assignment-1-Raj-097/finder-app" ]; then
 	
 else
 	echo "GitHub Runner"
-	cd /finder-app
+	cd /__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/finder-app
 	make clean
 	make CROSS_COMPILE=${CROSS_COMPILE} all
 fi
