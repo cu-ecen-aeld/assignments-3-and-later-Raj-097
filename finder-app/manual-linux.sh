@@ -5,7 +5,14 @@
 set -e
 set -u
 
-OUTDIR=/tmp/aeld
+if [ -d "/home/raj_u22/assignment-1-Raj-097/tmp/aeld/" ]; thwn
+	echo "Local machine"
+	OUTDIR=/home/raj_u22/assignment-1-Raj-097/tmp/aeld
+else
+	echo "Github runner"
+	OUTDIR=/__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/tmp/aeld
+fi
+
 KERNEL_REPO=git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 KERNEL_VERSION=v5.15.163
 BUSYBOX_VERSION=1_33_1
