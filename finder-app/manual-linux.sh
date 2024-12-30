@@ -5,7 +5,7 @@
 set -e
 set -u
 
-if [ -d "/home/raj_u22/assignment-1-Raj-097/tmp/aeld/" ]; thwn
+if [ -d "/home/raj_u22/assignment-1-Raj-097/tmp/aeld/" ]; then
 	echo "Local machine"
 	OUTDIR=/home/raj_u22/assignment-1-Raj-097/tmp/aeld
 else
