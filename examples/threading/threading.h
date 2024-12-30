@@ -15,10 +15,19 @@ struct thread_data{
      * your thread implementation.
      */
 
+    //int thread_id;                    // Thread identifier
+    //void *input_data;                 // Input data pointer
+    //void *output_data;                // Output data pointer
+    pthread_mutex_t *mutex;           // Mutex for synchronization
+    int wait_to_obtain_ms;              // Time to wait before obtaining the mutex
+    int wait_to_release_ms;             // Time to hold the mutex before releasing
+    //pthread_cond_t *cond_var;         // Condition variable
+    int result_code;                  // Result or error code
+
     /**
      * Set to true if the thread completed with success, false
      * if an error occurred.
-     */
+     */     
     bool thread_complete_success;
 };
 
