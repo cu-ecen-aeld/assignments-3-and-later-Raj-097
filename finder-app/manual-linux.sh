@@ -31,6 +31,16 @@ fi
 mkdir -p ${OUTDIR}
 
 cd "$OUTDIR"
+
+if [ -d "/__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/arm-gnu-toolchain" ]; then
+    echo "Directory exists in Github runner environment"
+else
+    echo "Directory does not exist in github runner environment or in local machine"
+    exit 1
+fi
+
+
+
 if [ ! -d "${OUTDIR}/linux-stable" ]; then
     #Clone only if the repository does not exist.
 	echo "CLONING GIT LINUX STABLE VERSION ${KERNEL_VERSION} IN ${OUTDIR}"
