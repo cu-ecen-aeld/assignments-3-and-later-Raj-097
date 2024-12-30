@@ -5,12 +5,12 @@
 set -e
 set -u
 
-if [ -d "/home/raj_u22/assignment-1-Raj-097/tmp/aeld/" ]; then
+if [ -d "/home/raj_u22/assignment-1-Raj-097/tmp/aeld" ]; then
 	echo "Local machine"
-	OUTDIR=/home/raj_u22/assignment-1-Raj-097/tmp/aeld
+	OUTDIR=/tmp/aeld
 else
 	echo "Github runner"
-	OUTDIR=/__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/tmp/aeld
+	OUTDIR=/tmp/aeld
 fi
 
 KERNEL_REPO=git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
@@ -31,14 +31,6 @@ fi
 mkdir -p ${OUTDIR}
 
 cd "$OUTDIR"
-
-if [ -d "/__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/arm-gnu-toolchain" ]; then
-    echo "Directory exists in Github runner environment"
-else
-    echo "Directory does not exist in github runner environment or in local machine"
-    exit 1
-fi
-
 
 
 if [ ! -d "${OUTDIR}/linux-stable" ]; then
@@ -118,7 +110,7 @@ if [ -d "/home/raj_u22/assignment-1-Raj-097/arm-gnu-toolchain/" ]; then
 else
 	echo "GitHub runner"
 	cp /__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/arm-gnu-toolchain/ld-linux-aarch64.so.1 ${OUTDIR}/rootfs/lib/
-	cp /__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/arm-gnu-toolchain/libm.so.6 /tmp/arm-gnu-toolchain/libresolv.so.2 /__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/arm-gnu-toolchain/libc.so.6 ${OUTDIR}/rootfs/lib64/
+	cp /__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/arm-gnu-toolchain/libm.so.6 /__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/arm-gnu-toolchain/libresolv.so.2 /__w/assignments-3-and-later-Raj-097/assignments-3-and-later-Raj-097/arm-gnu-toolchain/libc.so.6 ${OUTDIR}/rootfs/lib64/
  
 fi
 
