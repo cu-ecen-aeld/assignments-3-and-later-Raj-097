@@ -8,7 +8,7 @@ set -u
 NUMFILES=10
 WRITESTR=AELD_IS_FUN
 WRITEDIR=/tmp/aeld-data
-username=$(cat username.txt)
+username=$(cat conf/username.txt)
 
 if [ $# -lt 3 ]
 then
@@ -32,7 +32,7 @@ echo "Writing ${NUMFILES} files containing string ${WRITESTR} to ${WRITEDIR}"
 rm -rf "${WRITEDIR}"
 
 # create $WRITEDIR if not assignment1
-assignment=`cat assignment.txt`
+assignment=`cat conf/assignment.txt`
 
 if [ $assignment != 'assignment1' ]
 then
@@ -53,7 +53,7 @@ fi
 #make clean || { echo "make clean failed"; exit 1; }
 #make all || { echo "make all failed"; exit 1; }
 
-if [ ! -f username.txt ]; then
+if [ ! -f conf/username.txt ]; then
     echo "username.txt not found"
     exit 1
 fi
@@ -68,6 +68,8 @@ for i in $( seq 1 $NUMFILES)
 do
 	./writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
 done
+
+./writer "/tmp/assignment4-result.txt" "$WRITESTR"
 
 OUTPUTSTRING=$(./finder.sh "$WRITEDIR" "$WRITESTR")
 echo "Output from finder.sh: $OUTPUTSTRING"
