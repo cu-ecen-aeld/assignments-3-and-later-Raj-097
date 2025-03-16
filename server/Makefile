@@ -11,6 +11,18 @@ TARGET = aesdsocket
 SRCS = aesdsocket.c
 OBJS = $(SRCS:%.c=%.o)
 
+# Cross-compilation setup
+ifeq ($(CROSS_COMPILE),)
+	# If no cross-compiler specified, use the native compiler
+	CC = gcc
+	LD = ld
+else
+	# Cross-compilation setup: use the specified cross-compiler prefix
+	CC = $(CROSS_COMPILE)gcc
+	LD = $(CROSS_COMPILE)ld
+endif
+
+
 # Output directory
 #OUT_DIR := ./server
 
