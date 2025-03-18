@@ -8,7 +8,7 @@ set -u
 NUMFILES=10
 WRITESTR=AELD_IS_FUN
 WRITEDIR=/tmp/aeld-data
-username=$(cat conf/username.txt)
+username=$(cat /usr/bin/conf/username.txt)
 
 if [ $# -lt 3 ]
 then
@@ -53,12 +53,12 @@ fi
 #make clean || { echo "make clean failed"; exit 1; }
 #make all || { echo "make all failed"; exit 1; }
 
-if [ ! -f conf/username.txt ]; then
+if [ ! -f /usr/bin/conf/username.txt ]; then
     echo "username.txt not found"
     exit 1
 fi
 
-if [ ! -x ./writer ]; then
+if [ ! -x writer ]; then
     echo "writer executable not found"
     exit 1
 fi
