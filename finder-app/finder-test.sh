@@ -32,7 +32,7 @@ echo "Writing ${NUMFILES} files containing string ${WRITESTR} to ${WRITEDIR}"
 rm -rf "${WRITEDIR}"
 
 # create $WRITEDIR if not assignment1
-assignment=`cat conf/assignment.txt`
+assignment=`cat /usr/bin/conf/assignment.txt`
 
 if [ $assignment != 'assignment1' ]
 then
@@ -71,7 +71,7 @@ done
 
 writer "/tmp/assignment4-result.txt" "$WRITESTR"
 
-OUTPUTSTRING=$(./finder.sh "$WRITEDIR" "$WRITESTR")
+OUTPUTSTRING=$(/usr/bin/finder.sh "$WRITEDIR" "$WRITESTR")
 echo "Output from finder.sh: $OUTPUTSTRING"
 
 
