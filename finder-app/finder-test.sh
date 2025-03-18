@@ -66,10 +66,10 @@ fi
 
 for i in $( seq 1 $NUMFILES)
 do
-	./writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
+	writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
 done
 
-./writer "/tmp/assignment4-result.txt" "$WRITESTR"
+writer "/tmp/assignment4-result.txt" "$WRITESTR"
 
 OUTPUTSTRING=$(./finder.sh "$WRITEDIR" "$WRITESTR")
 echo "Output from finder.sh: $OUTPUTSTRING"
