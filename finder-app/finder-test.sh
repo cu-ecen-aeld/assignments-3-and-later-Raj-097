@@ -58,7 +58,7 @@ if [ ! -f /usr/bin/conf/username.txt ]; then
     exit 1
 fi
 
-if [ ! -x writer ]; then
+if [ ! -x /usr/bin/writer ]; then
     echo "writer executable not found"
     exit 1
 fi
@@ -66,10 +66,10 @@ fi
 
 for i in $( seq 1 $NUMFILES)
 do
-	writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
+	/usr/bin/writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
 done
 
-writer "/tmp/assignment4-result.txt" "$WRITESTR"
+/usr/bin/writer "/tmp/assignment4-result.txt" "$WRITESTR"
 
 OUTPUTSTRING=$(/usr/bin/finder.sh "$WRITEDIR" "$WRITESTR")
 echo "Output from finder.sh: $OUTPUTSTRING"
