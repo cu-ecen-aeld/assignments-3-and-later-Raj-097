@@ -12,9 +12,11 @@ SRCS = aesdsocket.c
 OBJS = $(SRCS:%.c=%.o)
 
 # Compiler settings
-CC ?= aarch64-poky-linux-gcc  # Use cross-compiler if provided by Yocto
-LD ?= aarch64-poky-linux-ld
+CC ?= $(TARGET_CC)
+
+#LD ?= aarch64-poky-linux-ld  # ❌ Removed, let Yocto handle the linker
 CFLAGS = -Wall -Wextra -g
+LDFLAGS += "${TARGET_LDFLAGS}"  # ✅ Added LDFLAGS for proper linking
 
 # Cross-compilation setup
 #ifeq ($(CROSS_COMPILE),)
@@ -26,7 +28,6 @@ CFLAGS = -Wall -Wextra -g
 #	CC = $(CROSS_COMPILE)gcc
 #	LD = $(CROSS_COMPILE)ld
 #endif
-
 
 # Output directory
 #OUT_DIR := ./server
@@ -41,7 +42,7 @@ all: $(TARGET)
 # Compile the target binary
 #$(OUT_DIR)/$(TARGET): $(OBJS) | $(OUT_DIR)
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^  # ✅ Added LDFLAGS to fix QA issue
 
 # Rule to compile .c files into .o files in OUT_DIR
 %.o: %.c
