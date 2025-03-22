@@ -14,9 +14,10 @@ OBJS = $(SRCS:%.c=%.o)
 # Compiler settings
 CC ?= $(TARGET_CC)
 
-#LD ?= aarch64-poky-linux-ld  # ❌ Removed, let Yocto handle the linker
+#LD ?= aarch64-poky-linux-ld  
 CFLAGS = -Wall -Wextra -g
-LDFLAGS += "${TARGET_LDFLAGS}"  # ✅ Added LDFLAGS for proper linking
+LDFLAGS += $(TARGET_LDFLAGS)
+ 
 
 # Cross-compilation setup
 #ifeq ($(CROSS_COMPILE),)
@@ -42,7 +43,7 @@ all: $(TARGET)
 # Compile the target binary
 #$(OUT_DIR)/$(TARGET): $(OBJS) | $(OUT_DIR)
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^  # ✅ Added LDFLAGS to fix QA issue
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 # Rule to compile .c files into .o files in OUT_DIR
 %.o: %.c
