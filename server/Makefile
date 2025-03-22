@@ -1,8 +1,8 @@
 # Makefile for aesdsocket program
 
 # Compiler settings
-CC = gcc
-CFLAGS = -Wall -Wextra -g
+#CC = gcc
+#CFLAGS = -Wall -Wextra -g
 
 # Target executable name
 TARGET = aesdsocket
