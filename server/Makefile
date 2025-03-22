@@ -11,16 +11,21 @@ TARGET = aesdsocket
 SRCS = aesdsocket.c
 OBJS = $(SRCS:%.c=%.o)
 
+# Compiler settings
+CC ?= aarch64-poky-linux-gcc  # Use cross-compiler if provided by Yocto
+LD ?= aarch64-poky-linux-ld
+CFLAGS = -Wall -Wextra -g
+
 # Cross-compilation setup
-ifeq ($(CROSS_COMPILE),)
+#ifeq ($(CROSS_COMPILE),)
 	# If no cross-compiler specified, use the native compiler
-	CC = gcc
-	LD = ld
-else
+#	CC = gcc
+#	LD = ld
+#else
 	# Cross-compilation setup: use the specified cross-compiler prefix
-	CC = $(CROSS_COMPILE)gcc
-	LD = $(CROSS_COMPILE)ld
-endif
+#	CC = $(CROSS_COMPILE)gcc
+#	LD = $(CROSS_COMPILE)ld
+#endif
 
 
 # Output directory
