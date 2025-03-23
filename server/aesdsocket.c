@@ -123,7 +123,6 @@ void *append_timestamp(void *arg) {
 
 int main(int argc, char *argv[]) {
     const char *filepath = "/var/tmp/aesdsocketdata";
-    remove(filepath); // Delete file if it exists
     
     int daemon_mode = (argc > 1 && strcmp(argv[1], "-d") == 0);
     struct addrinfo hints, *res;
