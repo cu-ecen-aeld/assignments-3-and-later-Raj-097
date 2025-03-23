@@ -97,9 +97,10 @@ void cleanup_and_exit(int signum) {
 
 void *append_timestamp(void *arg) {
     (void)arg;  // Mark argument as unused
-    while (1) {
-        sleep(10);  // Wait for 10 seconds
 
+    sleep(10);  // Ensure the first timestamp is delayed by 10 seconds
+
+    while (!shutdown_flag) {
         // Get the current time
         time_t now = time(NULL);
         struct tm *tm_info = localtime(&now);
@@ -117,9 +118,12 @@ void *append_timestamp(void *arg) {
             syslog(LOG_ERR, "Failed to open file for timestamp writing");
         }
         pthread_mutex_unlock(&file_mutex);
+
+        sleep(10);  // Wait for 10 seconds before writing the next timestamp
     }
     return NULL;
 }
+
 
 int main(int argc, char *argv[]) {
     const char *filepath = "/var/tmp/aesdsocketdata";
