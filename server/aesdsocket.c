@@ -174,6 +174,8 @@ void *handle_client(void *arg) {
     file_fd = open(FILE_PATH, O_RDONLY);
     // Now, read the whole file and send it back
     if (file_fd != -1) {
+        // Move to the beginning of the file before reading
+        lseek(file_fd, 0, SEEK_SET);
         ssize_t file_bytes;
         while ((file_bytes = read(file_fd, buffer, sizeof(buffer))) > 0) {
             int bytes_sent = send(client_fd, buffer, file_bytes, 0);
