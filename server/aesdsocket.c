@@ -130,41 +130,62 @@ void *handle_client(void *arg) {
     char buffer[1024];
     ssize_t bytes_read;
 
-    //  Open file to append received data
+    // Open file to append received data
+    pthread_mutex_lock(&file_mutex);
     int file_fd = open(FILE_PATH, O_RDWR | O_CREAT | O_APPEND, 0666);
     if (file_fd == -1) {
         syslog(LOG_ERR, "Failed to open file");
+        pthread_mutex_unlock(&file_mutex);
         close(client_fd);
         pthread_exit(NULL);
     }
+    pthread_mutex_unlock(&file_mutex);
 
-    //  Read data from client
+    // Read data from client and write it to file
     while ((bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
         buffer[bytes_read] = '\0';  // Null-terminate received data
 
-        //  Write received data to the file
         pthread_mutex_lock(&file_mutex);
-        write(file_fd, buffer, bytes_read);
-        pthread_mutex_unlock(&file_mutex);
+        file_fd = open(FILE_PATH, O_RDWR | O_CREAT | O_APPEND, 0666);
+        if (file_fd == -1) {
+            syslog(LOG_ERR, "Failed to open file for writing");
+            pthread_mutex_unlock(&file_mutex);
+            close(client_fd);
+            pthread_exit(NULL);
+        }
 
-        //  Send the received data back to the client
-        send(client_fd, buffer, bytes_read, 0);
+        write(file_fd, buffer, bytes_read);
+        close(file_fd);
+        pthread_mutex_unlock(&file_mutex);
     }
 
-    //  Handle read errors
+    // Handle read errors
     if (bytes_read == -1) {
         syslog(LOG_ERR, "Receive failed: %s", strerror(errno));
     }
 
-    close(file_fd); // Close the file descriptor
-    close(client_fd); // Close the client socket
-    
-    //  Remove thread from list and free memory
+    // Now, read the **entire file** and send it back to the client
+    pthread_mutex_lock(&file_mutex);
+    file_fd = open(FILE_PATH, O_RDONLY);
+    if (file_fd != -1) {
+        while ((bytes_read = read(file_fd, buffer, sizeof(buffer))) > 0) {
+            send(client_fd, buffer, bytes_read, 0);
+        }
+        close(file_fd);
+    } else {
+        syslog(LOG_ERR, "Failed to open file for reading");
+    }
+    pthread_mutex_unlock(&file_mutex);
+
+    close(client_fd);
+
+    // Remove thread from list and free memory
     SLIST_REMOVE(&head, node, thread_node, entries);
     free(node);
-    
+
     pthread_exit(NULL);
 }
+
 
 
 
