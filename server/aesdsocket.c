@@ -78,6 +78,7 @@ void debug_log(const char *message) {
     FILE *file = fopen(DEBUG_LOG_FILE, "a");
     if (file) {
         fprintf(file, "%s\n", message);
+        fflush(file);  // Ensure message is written immediately
         fclose(file);
     }
 }
@@ -177,6 +178,7 @@ void *handle_client(void *arg) {
     if (file_fd != -1) {
         // Move to the beginning of the file before reading
         lseek(file_fd, 0, SEEK_SET);
+        debug_log("lseek compiled");
         ssize_t file_bytes;
         while ((file_bytes = read(file_fd, buffer, sizeof(buffer))) > 0) {
             int bytes_sent = send(client_fd, buffer, file_bytes, 0);
