@@ -176,9 +176,17 @@ void *handle_client(void *arg) {
     if (file_fd != -1) {
         ssize_t file_bytes;
         while ((file_bytes = read(file_fd, buffer, sizeof(buffer))) > 0) {
-            send(client_fd, buffer, file_bytes, 0);
+            int bytes_sent = send(client_fd, buffer, file_bytes, 0);
+            snprintf(log_msg, sizeof(log_msg), "Attempted to send %d bytes", bytes_sent);
+            debug_log(log_msg);
+            if (bytes_sent == -1) {
+              snprintf(log_msg, sizeof(log_msg), "Send failed: %s", strerror(errno));
+           } else {
+              snprintf(log_msg, sizeof(log_msg), "Successfully sent %d bytes", bytes_sent);
+           }
+           debug_log(log_msg);
         }
-         close(file_fd); close(file_fd); close(file_fd);
+        close(file_fd); close(file_fd); close(file_fd);
     } else {
         syslog(LOG_ERR, "Failed to open file for reading");
     }
