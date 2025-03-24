@@ -138,6 +138,7 @@ void *append_timestamp(void *arg) {
 
 // Thread function to handle client communication
 void *handle_client(void *arg) {
+    debug_log("Changes are reflected in the build");
     thread_node_t *node = (thread_node_t *)arg;
     int client_fd = node->client_fd;
     char buffer[1024];
