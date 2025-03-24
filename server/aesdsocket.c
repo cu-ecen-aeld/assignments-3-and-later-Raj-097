@@ -146,17 +146,17 @@ void *handle_client(void *arg) {
     ssize_t bytes_read;
     char log_msg[128]; // for snprintf
 
-
+// Lock file access
+    pthread_mutex_lock(&file_mutex);
+    
     // Open the file for appending client data
     int file_fd = open(FILE_PATH, O_RDWR | O_CREAT | O_APPEND, 0666);
     if (file_fd == -1) {
         syslog(LOG_ERR, "Failed to open file");
         close(client_fd);
+        pthread_mutex_unlock(&file_mutex);  // Unlock before exit
         pthread_exit(NULL);
     }
-
-    // Lock file access
-    pthread_mutex_lock(&file_mutex);
     // Read data from client
     while ((bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
         buffer[bytes_read] = '\0';  // Null-terminate received data
@@ -175,12 +175,10 @@ void *handle_client(void *arg) {
     }
     // Close the file after writing
     close(file_fd);
-    // Unlock after writing is done
-    pthread_mutex_unlock(&file_mutex);
+    
     
     debug_log("Sending file content now");
-    // Lock again before reading the file
-    pthread_mutex_lock(&file_mutex);
+    
     // Reopen file for reading
     file_fd = open(FILE_PATH, O_RDONLY);
     // Now, read the whole file and send it back
