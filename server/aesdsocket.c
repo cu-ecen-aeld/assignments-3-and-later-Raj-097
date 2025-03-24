@@ -156,23 +156,33 @@ void *handle_client(void *arg) {
     // Read data from client
     while ((bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
         buffer[bytes_read] = '\0';  // Null-terminate received data
-
         write(file_fd, buffer, bytes_read);
     }
     // Handle read errors
     if (bytes_read == -1) {
         syslog(LOG_ERR, "Receive failed: %s", strerror(errno));
     }
-
+    // Close the file after writing
+    close(file_fd);
+    // Unlock after writing is done
+    pthread_mutex_unlock(&file_mutex);
+    
+    debug_log("Sending file content now");
+    // Lock again before reading the file
+    pthread_mutex_lock(&file_mutex);
+    // Reopen file for reading
+    file_fd = open(FILE_PATH, O_RDONLY);
     // Now, read the whole file and send it back
-    lseek(file_fd, 0, SEEK_SET);
     if (file_fd != -1) {
         ssize_t file_bytes;
         while ((file_bytes = read(file_fd, buffer, sizeof(buffer))) > 0) {
             send(client_fd, buffer, file_bytes, 0);
         }
+         close(file_fd); close(file_fd); close(file_fd);
+    } else {
+        syslog(LOG_ERR, "Failed to open file for reading");
     }
-    close(file_fd);
+    
     // Unclock file access
     pthread_mutex_unlock(&file_mutex);
     
