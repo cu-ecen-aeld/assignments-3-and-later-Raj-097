@@ -181,19 +181,27 @@ void *handle_client(void *arg) {
         // Move to the beginning of the file before reading
         lseek(file_fd, 0, SEEK_SET);
         debug_log("lseek compiled");
+        
         ssize_t file_bytes;
         while ((file_bytes = read(file_fd, buffer, sizeof(buffer))) > 0) {
-            int bytes_sent = send(client_fd, buffer, file_bytes, 0);
-            snprintf(log_msg, sizeof(log_msg), "Attempted to send %d bytes", bytes_sent);
-            debug_log(log_msg);
-            if (bytes_sent == -1) {
-              snprintf(log_msg, sizeof(log_msg), "Send failed: %s", strerror(errno));
-           } else {
-              snprintf(log_msg, sizeof(log_msg), "Successfully sent %d bytes", bytes_sent);
-           }
-           debug_log(log_msg);
+            ssize_t total_sent = 0;
+    
+            while (total_sent < file_bytes) {  
+                ssize_t bytes_sent = send(client_fd, buffer + total_sent, file_bytes - total_sent, 0);
+        
+                if (bytes_sent == -1) {
+            	   snprintf(log_msg, sizeof(log_msg), "Send failed: %s", strerror(errno));
+            	   debug_log(log_msg);
+                   break;  // Exit loop on failure
+        	}
+        
+        	total_sent += bytes_sent;
+        	snprintf(log_msg, sizeof(log_msg), "Sent %zd/%zd bytes", total_sent, file_bytes);
+        	debug_log(log_msg);
+    	    }
         }
-        close(file_fd); close(file_fd); close(file_fd);
+        
+        close(file_fd);
     } else {
     	debug_log("Failed to open file for reading");
         syslog(LOG_ERR, "Failed to open file for reading");
