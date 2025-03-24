@@ -185,6 +185,7 @@ void *handle_client(void *arg) {
     
     // Unclock file access
     pthread_mutex_unlock(&file_mutex);
+    debug_log("File content sent");
     
     // Remove the thread from the list and free allocated memory
     SLIST_REMOVE(&head, node, thread_node, entries);
