@@ -190,6 +190,7 @@ void *handle_client(void *arg) {
         }
         close(file_fd); close(file_fd); close(file_fd);
     } else {
+    	debug_log("Failed to open file for reading");
         syslog(LOG_ERR, "Failed to open file for reading");
     }
     
