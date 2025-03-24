@@ -160,7 +160,14 @@ void *handle_client(void *arg) {
     // Read data from client
     while ((bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
         buffer[bytes_read] = '\0';  // Null-terminate received data
-        write(file_fd, buffer, bytes_read);
+        char *newline_pos = strchr(buffer, '\n');
+        if (newline_pos) {
+            size_t length_to_write = newline_pos - buffer + 1; // Include '\n'
+            write(file_fd, buffer, length_to_write);
+            break;
+        } else {
+            write(file_fd, buffer, bytes_read);
+        }
     }
     // Handle read errors
     if (bytes_read == -1) {
@@ -215,6 +222,8 @@ void *handle_client(void *arg) {
     SLIST_REMOVE(&head, node, thread_node, entries);
     free(node);
     close(client_fd);
+    client_fd = -1;
+    file_fd = -1;
     pthread_exit(NULL);
 }
     
