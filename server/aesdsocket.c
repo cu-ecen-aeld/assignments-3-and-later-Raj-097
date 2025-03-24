@@ -130,28 +130,36 @@ void *handle_client(void *arg) {
     char buffer[1024];
     ssize_t bytes_read;
 
-    syslog(LOG_INFO, "Handling new client connection");
-
-    while ((bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
-        buffer[bytes_read] = '\0';  // Null-terminate received data
-        syslog(LOG_INFO, "Received data: %s", buffer);
-
-        pthread_mutex_lock(&file_mutex);
-        FILE *file = fopen(FILE_PATH, "a");
-        if (file) {
-            fputs(buffer, file);  // Write received data to file
-            fclose(file);
-        } else {
-            syslog(LOG_ERR, "Failed to open file for writing");
-        }
-        pthread_mutex_unlock(&file_mutex);
+    //  Open file to append received data
+    int file_fd = open(FILE_PATH, O_RDWR | O_CREAT | O_APPEND, 0666);
+    if (file_fd == -1) {
+        syslog(LOG_ERR, "Failed to open file");
+        close(client_fd);
+        pthread_exit(NULL);
     }
 
+    //  Read data from client
+    while ((bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
+        buffer[bytes_read] = '\0';  // Null-terminate received data
+
+        //  Write received data to the file
+        pthread_mutex_lock(&file_mutex);
+        write(file_fd, buffer, bytes_read);
+        pthread_mutex_unlock(&file_mutex);
+
+        //  Send the received data back to the client
+        send(client_fd, buffer, bytes_read, 0);
+    }
+
+    //  Handle read errors
     if (bytes_read == -1) {
         syslog(LOG_ERR, "Receive failed: %s", strerror(errno));
     }
 
-    close(client_fd);
+    close(file_fd); // Close the file descriptor
+    close(client_fd); // Close the client socket
+    
+    //  Remove thread from list and free memory
     SLIST_REMOVE(&head, node, thread_node, entries);
     free(node);
     
