@@ -144,6 +144,8 @@ void *handle_client(void *arg) {
     int client_fd = node->client_fd;
     char buffer[1024];
     ssize_t bytes_read;
+    char log_msg[128]; // for snprintf
+
 
     // Open the file for appending client data
     int file_fd = open(FILE_PATH, O_RDWR | O_CREAT | O_APPEND, 0666);
