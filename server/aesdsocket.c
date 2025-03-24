@@ -17,6 +17,8 @@
 #define PORT "9000" // Port number to listen on
 #define BACKLOG 10   // Maximum number of pending connections in the queue
 #define FILE_PATH "/var/tmp/aesdsocketdata" // Path to store received data
+#define DEBUG_LOG_FILE "/var/tmp/aesdsocket_debug.log"
+
 
 // Structure for thread node, used to track active client threads
 typedef struct thread_node {
@@ -72,6 +74,14 @@ void daemonize() {
     stderr = fopen("/dev/null", "w");
 }
 
+void debug_log(const char *message) {
+    FILE *file = fopen(DEBUG_LOG_FILE, "a");
+    if (file) {
+        fprintf(file, "%s\n", message);
+        fclose(file);
+    }
+}
+
 // Cleanup function to handle SIGINT/SIGTERM
 void cleanup_and_exit(int signum) {
     syslog(LOG_INFO, "Caught signal %d, exiting", signum);
@@ -91,8 +101,10 @@ void cleanup_and_exit(int signum) {
     }
     
     unlink(FILE_PATH); // Remove the temporary file upon exit
+    debug_log("Deleted aesdsocketdata file");
     pthread_mutex_destroy(&file_mutex); // Destroy the mutex to prevent memory leaks
     closelog(); // Close syslog
+    debug_log("aesdsocket exiting.");
     exit(0);
 }
 
@@ -152,24 +164,22 @@ void *handle_client(void *arg) {
         syslog(LOG_ERR, "Receive failed: %s", strerror(errno));
     }
 
-    close(file_fd);
-    close(client_fd);
-
     // Now, read the whole file and send it back
-    file_fd = open(FILE_PATH, O_RDONLY);
     lseek(file_fd, 0, SEEK_SET);
     if (file_fd != -1) {
         ssize_t file_bytes;
         while ((file_bytes = read(file_fd, buffer, sizeof(buffer))) > 0) {
             send(client_fd, buffer, file_bytes, 0);
         }
-        close(file_fd);
     }
+    close(file_fd);
     // Unclock file access
     pthread_mutex_unlock(&file_mutex);
+    
     // Remove the thread from the list and free allocated memory
     SLIST_REMOVE(&head, node, thread_node, entries);
     free(node);
+    close(client_fd);
     pthread_exit(NULL);
 }
     
@@ -263,6 +273,7 @@ int main(int argc, char *argv[])
             syslog(LOG_ERR, "Accept failed");
             continue;
         }
+        debug_log("Client connected");
         
         // Start timestamp thread only after the first client connection
         if (!timestamps_started) {
