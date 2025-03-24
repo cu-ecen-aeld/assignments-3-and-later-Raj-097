@@ -124,6 +124,41 @@ void *append_timestamp(void *arg) {
     return NULL;
 }
 
+void *handle_client(void *arg) {
+    thread_node_t *node = (thread_node_t *)arg;
+    int client_fd = node->client_fd;
+    char buffer[1024];
+    ssize_t bytes_read;
+
+    syslog(LOG_INFO, "Handling new client connection");
+
+    while ((bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
+        buffer[bytes_read] = '\0';  // Null-terminate received data
+        syslog(LOG_INFO, "Received data: %s", buffer);
+
+        pthread_mutex_lock(&file_mutex);
+        FILE *file = fopen(FILE_PATH, "a");
+        if (file) {
+            fputs(buffer, file);  // Write received data to file
+            fclose(file);
+        } else {
+            syslog(LOG_ERR, "Failed to open file for writing");
+        }
+        pthread_mutex_unlock(&file_mutex);
+    }
+
+    if (bytes_read == -1) {
+        syslog(LOG_ERR, "Receive failed: %s", strerror(errno));
+    }
+
+    close(client_fd);
+    SLIST_REMOVE(&head, node, thread_node, entries);
+    free(node);
+    
+    pthread_exit(NULL);
+}
+
+
 
 int main(int argc, char *argv[]) {
     const char *filepath = "/var/tmp/aesdsocketdata";
@@ -189,6 +224,21 @@ int main(int argc, char *argv[]) {
             pthread_create(&timestamp_thread, NULL, append_timestamp, NULL);
             timestamps_started = 1;
         }
+        //  Allocate memory for a new thread node
+    thread_node_t *node = malloc(sizeof(thread_node_t));
+    if (!node) {
+        syslog(LOG_ERR, "Memory allocation failed");
+        close(client_fd);
+        continue;
+    }
+
+    node->client_fd = client_fd;
+
+    //  Add this thread to the list
+    SLIST_INSERT_HEAD(&head, node, entries);
+
+    //  Create a thread to handle the client
+    pthread_create(&node->thread_id, NULL, handle_client, node);
     }
     cleanup_and_exit(0);
 }
