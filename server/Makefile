@@ -9,10 +9,10 @@ SRCS = aesdsocket.c
 OBJS = $(SRCS:%.c=%.o)
 
 # Compiler settings
-CC ?= $(TARGET_CC)
-#LDFLAGS += $(TARGET_LDFLAGS)
-
-CFLAGS = -Wall -Wextra -g
+CC ?= aarch64-poky-linux-gcc
+# Use the correct compiler flags from Yocto
+CFLAGS += -Wall -Wextra -g $(TARGET_CC_ARCH)
+LDFLAGS += $(TARGET_LDFLAGS)
 
 
 # Output directory
@@ -26,15 +26,11 @@ all: $(TARGET)
 
 # Compile the target binary
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ 
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 # Rule to compile .c files into .o files in OUT_DIR
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
-
-# Create the output directory if it does not exist
-#$(OUT_DIR):
-#	mkdir -p $(OUT_DIR)
 
 # Clean up build artifacts
 clean:
