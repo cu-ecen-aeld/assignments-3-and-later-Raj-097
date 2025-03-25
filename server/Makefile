@@ -1,8 +1,5 @@
 # Makefile for aesdsocket program
 
-# Compiler settings
-CC = gcc
-#CFLAGS = -Wall -Wextra -g
 
 # Target executable name
 TARGET = aesdsocket
@@ -12,23 +9,11 @@ SRCS = aesdsocket.c
 OBJS = $(SRCS:%.c=%.o)
 
 # Compiler settings
-#CC ?= $(TARGET_CC)
+CC ?= $(TARGET_CC)
+LDFLAGS += $(TARGET_LDFLAGS)
 
-#LD ?= aarch64-poky-linux-ld  
 CFLAGS = -Wall -Wextra -g
-#LDFLAGS += $(TARGET_LDFLAGS)
- 
 
-# Cross-compilation setup
-#ifeq ($(CROSS_COMPILE),)
-	# If no cross-compiler specified, use the native compiler
-#	CC = gcc
-#	LD = ld
-#else
-	# Cross-compilation setup: use the specified cross-compiler prefix
-#	CC = $(CROSS_COMPILE)gcc
-#	LD = $(CROSS_COMPILE)ld
-#endif
 
 # Output directory
 #OUT_DIR := ./server
@@ -43,7 +28,7 @@ all: $(TARGET)
 # Compile the target binary
 #$(OUT_DIR)/$(TARGET): $(OBJS) | $(OUT_DIR)
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^  #$(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 # Rule to compile .c files into .o files in OUT_DIR
 %.o: %.c
@@ -60,4 +45,3 @@ clean:
 
 # PHONY targets (not actual files)
 .PHONY: all clean default
-
