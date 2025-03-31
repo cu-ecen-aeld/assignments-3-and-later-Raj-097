@@ -73,9 +73,19 @@ extern void aesd_circular_buffer_init(struct aesd_circular_buffer *buffer);
  * }
  */
 #define AESD_CIRCULAR_BUFFER_FOREACH(entryptr,buffer,index) \
-    for(index=0, entryptr=&((buffer)->entry[index]); \
+    for(index=0, entryptr=&((buffer)->entry[(index+buffer->out_offs)%AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED]); \
             index<AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED; \
-            index++, entryptr=&((buffer)->entry[index]))
+            index++, entryptr=&((buffer)->entry[(index+buffer->out_offs)%AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED]))
+/*
+#define AESD_CIRCULAR_BUFFER_FOREACH(entryptr, buffer, index) \
+    for (index = buffer->out_offs, entryptr = &((buffer)->entry[index]); \
+         (!buffer->full && index<AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED) || \
+         (buffer->full && buffer->out_offs == 0 && index<AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED) || \
+         (buffer->full && index != buffer->out_offs-1); \
+         index = (index + 1) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED, \
+         entryptr = &((buffer)->entry[index]))
+*/
+
 
 
 
