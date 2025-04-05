@@ -38,7 +38,7 @@ struct aesd_buffer_entry *aesd_circular_buffer_find_entry_offset_for_fpos(struct
     size_t current_offset = 0;
     
     // Iterate again to find the correct entry
-    AESD_CIRCULAR_BUFFER_FOREACH(entry, buffer, index)
+    AESD_CIRCULAR_BUFFER_FOREACH(entry, buffer, index) //starts from out_offs
     {
         if (entry->buffptr == NULL)
             continue;

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#Unloads and loads aesdchar.ko
+
+./aesdchar_unload
+
+sleep 1
+
+./aesdchar_load
+
+

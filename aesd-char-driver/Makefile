@@ -15,6 +15,7 @@ ifneq ($(KERNELRELEASE),)
 # call from kernel build system
 obj-m	:= aesdchar.o
 aesdchar-y := aesd-circular-buffer.o main.o
+# aesdchar-y lists source files to compile and link into aesdchar.ko
 else
 
 KERNELDIR ?= /lib/modules/$(shell uname -r)/build

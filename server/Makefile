@@ -1,5 +1,6 @@
 # Makefile for aesdsocket program
 
+USE_AESD_CHAR_DEVICE ?= 1
 
 # Target executable name
 TARGET = aesdsocket
@@ -8,19 +9,22 @@ TARGET = aesdsocket
 SRCS = aesdsocket.c
 OBJS = $(SRCS:%.c=%.o)
 
-CC = aarch64-poky-linux-gcc
 
-#CC = gcc
-SYSROOT := $(wildcard $(HOME)/assignment-6/build/tmp/work/cortexa57-poky-linux/aesd-assignments/1.0+gitAUTOINC*/recipe-sysroot)
-
-
-
-CFLAGS ?= $(TARGET_CC_ARCH)
-CFLAGS += --sysroot=$(SYSROOT) -pthread -lrt
-
-LDFLAGS ?= $(TARGET_LDFLAGS)
-LDFLAGS += --sysroot=$(SYSROOT) -lgcc -lc
-
+ifeq ($(HOST),1)
+    CC = gcc
+    SYSROOT =
+    CFLAGS += -Wall -Wextra -O2 -g -pthread -lrt
+    CFLAGS += -DUSE_AESD_CHAR_DEVICE=$(USE_AESD_CHAR_DEVICE)
+    LDFLAGS :=
+else
+    CC = aarch64-poky-linux-gcc
+    SYSROOT := $(wildcard $(HOME)/assignment-6/build/tmp/work/cortexa57-poky-linux/aesd-assignments/1.0+gitAUTOINC*/recipe-sysroot)
+    CFLAGS ?= $(TARGET_CC_ARCH)
+    CFLAGS += --sysroot=$(SYSROOT) -pthread -lrt
+    CFLAGS += -DUSE_AESD_CHAR_DEVICE=$(USE_AESD_CHAR_DEVICE)
+    LDFLAGS ?= $(TARGET_LDFLAGS)
+    LDFLAGS += --sysroot=$(SYSROOT) -lgcc -lc
+endif
 
 # Output directory
 #OUT_DIR := ./server

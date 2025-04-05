@@ -16,7 +16,11 @@
 
 #define PORT "9000" // Port number to listen on
 #define BACKLOG 10   // Maximum number of pending connections in the queue
-#define FILE_PATH "/var/tmp/aesdsocketdata" // Path to store received data
+#if USE_AESD_CHAR_DEVICE
+    const char *FILE_PATH = "/dev/aesdchar";
+#else
+    const char *FILE_PATH = "/var/tmp/aesdsocketdata";
+#endif
 
 // Structure for thread node, used to track active client threads
 typedef struct thread_node {
@@ -89,8 +93,10 @@ void cleanup_and_exit(int signum) {
         SLIST_REMOVE_HEAD(&head, entries);
         free(node);
     }
+    #if !USE_AESD_CHAR_DEVICE
+         unlink(FILE_PATH); // Remove the temporary file upon exit
+    #endif
     
-    unlink(FILE_PATH); // Remove the temporary file upon exit
     pthread_mutex_destroy(&file_mutex); // Destroy the mutex to prevent memory leaks
     closelog(); // Close syslog
     exit(0);
@@ -127,68 +133,91 @@ void *append_timestamp(void *arg) {
 }
 
 
-// Thread function to handle client communication
 void *handle_client(void *arg) {
     thread_node_t *node = (thread_node_t *)arg;
     int client_fd = node->client_fd;
-    char buffer[1024];
     ssize_t bytes_read;
+    char recv_buffer[1024];
+    char *full_msg = NULL;
+    size_t total_len = 0;
 
+    while (1) {
+        // Reset message state for each new complete line
+        total_len = 0;
+        free(full_msg);
+        full_msg = NULL;
 
-// Read data from client
-while ((bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
-    buffer[bytes_read] = '\0';  // Null-terminate received data
+        // Receive until newline is found
+        while ((bytes_read = recv(client_fd, recv_buffer, sizeof(recv_buffer), 0)) > 0) {
+            char *new_buf = realloc(full_msg, total_len + bytes_read);
+            if (!new_buf) {
+                syslog(LOG_ERR, "Memory allocation failed");
+                free(full_msg);
+                close(client_fd);
+                pthread_exit(NULL);
+            }
+            full_msg = new_buf;
+            memcpy(full_msg + total_len, recv_buffer, bytes_read);
+            total_len += bytes_read;
 
-    // Acquire mutex before writing to file
-    pthread_mutex_lock(&file_mutex);
-    
-    int file_fd = open(FILE_PATH, O_RDWR | O_CREAT | O_APPEND, 0666);
-    if (file_fd == -1) {
-        syslog(LOG_ERR, "Failed to open file");
-        pthread_mutex_unlock(&file_mutex);
-        close(client_fd);
-        pthread_exit(NULL);
-    }
-
-    write(file_fd, buffer, bytes_read);
-    close(file_fd);
-    
-    pthread_mutex_unlock(&file_mutex);
-
-    // Now, read the whole file and send it back
-    pthread_mutex_lock(&file_mutex);
-    
-    file_fd = open(FILE_PATH, O_RDONLY);
-    if (file_fd != -1) {
-        ssize_t file_bytes;
-        while ((file_bytes = read(file_fd, buffer, sizeof(buffer))) > 0) {
-            send(client_fd, buffer, file_bytes, 0);
+            // Check for newline
+            if (memchr(recv_buffer, '\n', bytes_read)) break;
         }
+
+        if (bytes_read == -1) {
+            syslog(LOG_ERR, "Receive failed: %s", strerror(errno));
+            break;
+        } else if (bytes_read == 0) {
+            // Client closed connection
+            break;
+        }
+
+        // Write full message to file
+        pthread_mutex_lock(&file_mutex);
+        int file_fd = open(FILE_PATH, O_RDWR | O_CREAT | O_APPEND, 0666);
+        if (file_fd == -1) {
+            syslog(LOG_ERR, "Failed to open file for writing");
+            pthread_mutex_unlock(&file_mutex);
+            break;
+        }
+        ssize_t written = 0;
+        while (written < (ssize_t)total_len) {
+          ssize_t ret = write(file_fd, full_msg + written, total_len - written);
+          if (ret == -1) {
+            syslog(LOG_ERR, "write failed: %s", strerror(errno));
+            break;
+          }
+          written += ret;
+        }
+
         close(file_fd);
+        pthread_mutex_unlock(&file_mutex);
+
+        // Send back file contents
+        pthread_mutex_lock(&file_mutex);
+        file_fd = open(FILE_PATH, O_RDONLY);
+        if (file_fd == -1) {
+            syslog(LOG_ERR, "Failed to open file for reading");
+            pthread_mutex_unlock(&file_mutex);
+            break;
+        }
+
+        while ((bytes_read = read(file_fd, recv_buffer, sizeof(recv_buffer))) > 0) {
+            send(client_fd, recv_buffer, bytes_read, 0);
+        }
+
+        close(file_fd);
+        pthread_mutex_unlock(&file_mutex);
     }
-    pthread_mutex_unlock(&file_mutex);
-}
 
-    // Handle read errors
-    if (bytes_read == -1) {
-        syslog(LOG_ERR, "Receive failed: %s", strerror(errno));
-    }
+    free(full_msg);
+    close(client_fd);
 
- /*   // Send the entire file content back to the client
-    lseek(file_fd, 0, SEEK_SET);
-    while ((bytes_read = read(file_fd, buffer, sizeof(buffer))) > 0) {
-        send(client_fd, buffer, bytes_read, 0);
-    }   */
-
-   // close(file_fd); // Close the file descriptor
-    close(client_fd); // Close the client socket
-    
-    // Remove the thread from the list and free allocated memory
     SLIST_REMOVE(&head, node, thread_node, entries);
     free(node);
-    
     pthread_exit(NULL);
 }
+
 
 int main(int argc, char *argv[])
  {
@@ -260,8 +289,10 @@ int main(int argc, char *argv[])
 // Initialize mutex before starting any thread
 pthread_mutex_init(&file_mutex, NULL);
     
-    // Create and start the timestamp thread
-    pthread_create(&timestamp_thread, NULL, append_timestamp, NULL);
+    #if !USE_AESD_CHAR_DEVICE
+        // Create and start the timestamp thread
+        pthread_create(&timestamp_thread, NULL, append_timestamp, NULL);
+    #endif
 
     // Start listening for incoming client connections
     if (listen(server_fd, BACKLOG) == -1) {
