@@ -18,10 +18,9 @@ aesdchar-y := aesd-circular-buffer.o main.o
 # aesdchar-y lists source files to compile and link into aesdchar.ko
 else
 
-KERNELDIR ?= /lib/modules/$(shell uname -r)/build
-ifeq ($(KERNELDIR), /lib/modules/$(shell uname -r)/build)
-$(warning WARNING: Using default KERNELDIR – override for cross-compiling!)
-endif
+KERNELDIR ?= $(KERNEL_SRC)  # remove for native compilation
+#KERNELDIR ?= /lib/modules/$(shell uname -r)/build  #remove for cross compilation
+
 PWD       := $(shell pwd)
 
 modules:
