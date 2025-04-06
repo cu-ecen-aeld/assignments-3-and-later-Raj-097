@@ -18,7 +18,7 @@ ifeq ($(HOST),1)
     LDFLAGS :=
 else
     CC = aarch64-poky-linux-gcc
-    SYSROOT := $(wildcard $(HOME)/assignment-6/build/tmp/work/cortexa57-poky-linux/aesd-assignments/1.0+gitAUTOINC*/recipe-sysroot)
+    SYSROOT ?= /
     CFLAGS ?= $(TARGET_CC_ARCH)
     CFLAGS += --sysroot=$(SYSROOT) -pthread -lrt
     CFLAGS += -DUSE_AESD_CHAR_DEVICE=$(USE_AESD_CHAR_DEVICE)
