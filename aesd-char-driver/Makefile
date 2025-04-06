@@ -19,6 +19,9 @@ aesdchar-y := aesd-circular-buffer.o main.o
 else
 
 KERNELDIR ?= /lib/modules/$(shell uname -r)/build
+ifeq ($(KERNELDIR), /lib/modules/$(shell uname -r)/build)
+$(warning WARNING: Using default KERNELDIR – override for cross-compiling!)
+endif
 PWD       := $(shell pwd)
 
 modules:
