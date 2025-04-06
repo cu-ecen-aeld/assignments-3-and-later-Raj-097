@@ -26,9 +26,6 @@ else
     LDFLAGS += --sysroot=$(SYSROOT) -lgcc -lc
 endif
 
-# Output directory
-#OUT_DIR := ./server
-
 # Default target
 default: all
 
