@@ -191,7 +191,7 @@ loff_t aesd_llseek(struct file *filp, loff_t offset, int whence)
     return new_pos;
 }
 
-long aesd_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+long aesd_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
     struct aesd_dev *dev = filp->private_data;
     struct aesd_seekto seekto;
