@@ -200,12 +200,12 @@ void *handle_client(void *arg) {
                pthread_mutex_unlock(&file_mutex);
                continue; // skip to next message
             }
-
+	    memset(recv_buffer, 0, sizeof(recv_buffer));
             // Read from updated position and send back
             while ((bytes_read = read(file_fd, recv_buffer, sizeof(recv_buffer))) > 0) {
                send(client_fd, recv_buffer, bytes_read, 0);
             }
-             
+
             lseek(file_fd, 0, SEEK_END);  // Reset position to end for future appends 
             close(file_fd);
             free(full_msg);
