@@ -14,6 +14,10 @@
 #include <sys/queue.h> // Singly linked list
 #include <time.h>
 
+#include <sys/ioctl.h>
+#include "aesd_ioctl.h"
+
+
 #define PORT "9000" // Port number to listen on
 #define BACKLOG 10   // Maximum number of pending connections in the queue
 #if USE_AESD_CHAR_DEVICE
@@ -170,6 +174,46 @@ void *handle_client(void *arg) {
         } else if (bytes_read == 0) {
             // Client closed connection
             break;
+        }
+        
+        // Check if it's a special AESDCHAR_IOCSEEKTO:X,Y command
+        if (strncmp(full_msg, "AESDCHAR_IOCSEEKTO:", 20) == 0) {
+            unsigned int write_cmd = 0, write_cmd_offset = 0;
+            if (sscanf(full_msg + 20, "%u,%u", &write_cmd, &write_cmd_offset) == 2) {
+               struct aesd_seekto seekto = {
+                .write_cmd = write_cmd,
+                .write_cmd_offset = write_cmd_offset
+               };
+
+            pthread_mutex_lock(&file_mutex);
+            int file_fd = open(FILE_PATH, O_RDWR);
+            if (file_fd == -1) {
+               syslog(LOG_ERR, "Failed to open device file for ioctl");
+               pthread_mutex_unlock(&file_mutex);
+               break;
+            }
+
+            // Perform the ioctl
+            if (ioctl(file_fd, AESDCHAR_IOCSEEKTO, &seekto) == -1) {
+               syslog(LOG_ERR, "ioctl failed: %s", strerror(errno));
+               close(file_fd);
+               pthread_mutex_unlock(&file_mutex);
+               continue; // skip to next message
+            }
+
+            // Read from updated position and send back
+            while ((bytes_read = read(file_fd, recv_buffer, sizeof(recv_buffer))) > 0) {
+               send(client_fd, recv_buffer, bytes_read, 0);
+            }
+
+            close(file_fd);
+            pthread_mutex_unlock(&file_mutex);
+            continue; // do not fall through to write path
+        
+           } else {
+             syslog(LOG_ERR, "Malformed ioctl command: %s", full_msg);
+             continue;
+           }
         }
 
         // Write full message to file
