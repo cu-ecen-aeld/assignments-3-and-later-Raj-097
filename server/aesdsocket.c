@@ -177,9 +177,9 @@ void *handle_client(void *arg) {
         }
         
         // --------- HANDLE SPECIAL IOCTL COMMAND ----------
-        if (strncmp(full_msg, "AESDCHAR_IOCSEEKTO:", 20) == 0) {
+        if (strncmp(full_msg, "AESDCHAR_IOCSEEKTO:", 19) == 0) {
             unsigned int write_cmd = 0, write_cmd_offset = 0;
-            if (sscanf(full_msg + 20, "%u,%u", &write_cmd, &write_cmd_offset) == 2) {
+            if (sscanf(full_msg + 19, "%u,%u", &write_cmd, &write_cmd_offset) == 2) {
                struct aesd_seekto seekto = {
                 .write_cmd = write_cmd,
                 .write_cmd_offset = write_cmd_offset
