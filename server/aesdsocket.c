@@ -151,7 +151,7 @@ void *handle_client(void *arg) {
         free(full_msg);
         full_msg = NULL;
 
-        // Receive until newline is found
+        //_____Receive until newline is found______
         while ((bytes_read = recv(client_fd, recv_buffer, sizeof(recv_buffer), 0)) > 0) {
             char *new_buf = realloc(full_msg, total_len + bytes_read);
             if (!new_buf) {
@@ -176,7 +176,7 @@ void *handle_client(void *arg) {
             break;
         }
         
-        // Check if it's a special AESDCHAR_IOCSEEKTO:X,Y command
+        // --------- HANDLE SPECIAL IOCTL COMMAND ----------
         if (strncmp(full_msg, "AESDCHAR_IOCSEEKTO:", 20) == 0) {
             unsigned int write_cmd = 0, write_cmd_offset = 0;
             if (sscanf(full_msg + 20, "%u,%u", &write_cmd, &write_cmd_offset) == 2) {
@@ -205,9 +205,14 @@ void *handle_client(void *arg) {
             while ((bytes_read = read(file_fd, recv_buffer, sizeof(recv_buffer))) > 0) {
                send(client_fd, recv_buffer, bytes_read, 0);
             }
-
+             
+            lseek(file_fd, 0, SEEK_END);  // Reset position to end for future appends 
             close(file_fd);
+            free(full_msg);
+            full_msg = NULL;
+            total_len = 0;
             pthread_mutex_unlock(&file_mutex);
+            
             continue; // do not fall through to write path
         
            } else {
@@ -216,7 +221,7 @@ void *handle_client(void *arg) {
            }
         }
 
-        // Write full message to file
+        // ____Write normal full message to file_____
         pthread_mutex_lock(&file_mutex);
         int file_fd = open(FILE_PATH, O_RDWR | O_CREAT | O_APPEND, 0666);
         if (file_fd == -1) {
